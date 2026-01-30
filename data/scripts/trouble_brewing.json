@@ -1,0 +1,209 @@
+{
+  "name": "Trouble Brewing",
+  "roles": [
+    {
+      "name": "Washerwoman",
+      "type": "Townsfolk",
+      "ability": "Start knowing that 1 of 2 players is a specific Townsfolk.",
+      "action_type": "InfoToken",
+      "reminders": [
+        "Townsfolk",
+        "Wrong"
+      ]
+    },
+    {
+      "name": "Librarian",
+      "type": "Townsfolk",
+      "ability": "Start knowing that 1 of 2 players is a specific Outsider. (Or that zero are in play.)",
+      "action_type": "InfoToken",
+      "reminders": [
+        "Outsider",
+        "Wrong"
+      ]
+    },
+    {
+      "name": "Investigator",
+      "type": "Townsfolk",
+      "ability": "Start knowing that 1 of 2 players is a specific Minion.",
+      "action_type": "InfoToken",
+      "reminders": [
+        "Minion",
+        "Wrong"
+      ]
+    },
+    {
+      "name": "Chef",
+      "type": "Townsfolk",
+      "ability": "Start knowing how many pairs of evil players are neighbors.",
+      "action_type": "YesNo",
+      "reminders": []
+    },
+    {
+      "name": "Empath",
+      "type": "Townsfolk",
+      "ability": "Each night, you learn how many of your 2 alive neighbors are evil.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Fortune Teller",
+      "type": "Townsfolk",
+      "ability": "Each night, choose 2 players: you learn if either is a Demon. There is an arbitrary good player that registers as a Demon to you.",
+      "action_type": "SelectPlayer",
+      "reminders": [
+        "Red Herring",
+        "Target"
+      ]
+    },
+    {
+      "name": "Undertaker",
+      "type": "Townsfolk",
+      "ability": "Each night*, you learn which character died by execution today.",
+      "action_type": "None",
+      "reminders": [
+        "Died Today"
+      ]
+    },
+    {
+      "name": "Monk",
+      "type": "Townsfolk",
+      "ability": "Each night*, choose a player (not yourself): they are safe from the Demon tonight.",
+      "action_type": "SelectPlayer",
+      "reminders": [
+        "Protected"
+      ]
+    },
+    {
+      "name": "Ravenkeeper",
+      "type": "Townsfolk",
+      "ability": "If you die at night, you are woken to choose a player: you learn their character.",
+      "action_type": "SelectPlayer",
+      "reminders": []
+    },
+    {
+      "name": "Virgin",
+      "type": "Townsfolk",
+      "ability": "The 1st time you are nominated, if the nominator is a Townsfolk, they are executed immediately.",
+      "action_type": "None",
+      "reminders": [
+        "No Ability"
+      ]
+    },
+    {
+      "name": "Slayer",
+      "type": "Townsfolk",
+      "ability": "Once per game, during the day, publicly choose a player: if they are the Demon, they die.",
+      "action_type": "SelectPlayer",
+      "reminders": [
+        "No Ability"
+      ]
+    },
+    {
+      "name": "Soldier",
+      "type": "Townsfolk",
+      "ability": "You are safe from the Demon.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Mayor",
+      "type": "Townsfolk",
+      "ability": "If no one dies by execution, you might die instead.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Butler",
+      "type": "Outsider",
+      "ability": "Each night, choose a player (not yourself): tomorrow, you may only vote if they vote too.",
+      "action_type": "SelectPlayer",
+      "reminders": [
+        "Master"
+      ]
+    },
+    {
+      "name": "Drunk",
+      "type": "Outsider",
+      "ability": "You do not know you are the Drunk. You think you are a Townsfolk, but you are not.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Recluse",
+      "type": "Outsider",
+      "ability": "You might register as evil & as a Minion or Demon, even if dead.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Saint",
+      "type": "Outsider",
+      "ability": "If you die by execution, your team loses.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Poisoner",
+      "type": "Minion",
+      "ability": "Each night, choose a player: they are poisoned tonight and tomorrow day.",
+      "action_type": "SelectPlayer",
+      "reminders": [
+        "Poisoned"
+      ]
+    },
+    {
+      "name": "Spy",
+      "type": "Minion",
+      "ability": "Each night, you see the Grimoire. You might register as good & as a Townsfolk or Outsider, even if dead.",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Scarlet Woman",
+      "type": "Minion",
+      "ability": "If there are 5 or more players alive & the Demon dies, you become the Demon. (Travelers don't count)",
+      "action_type": "None",
+      "reminders": [
+        "Is Demon"
+      ]
+    },
+    {
+      "name": "Baron",
+      "type": "Minion",
+      "ability": "There are extra Outsiders in play. [+2 Outsiders]",
+      "action_type": "None",
+      "reminders": []
+    },
+    {
+      "name": "Imp",
+      "type": "Demon",
+      "ability": "Each night*, choose a player: they die. If you kill yourself this way, a Minion becomes the Imp.",
+      "action_type": "SelectPlayer",
+      "reminders": [
+        "Dead"
+      ]
+    }
+  ],
+  "first_night": [
+    "Poisoner",
+    "Washerwoman",
+    "Librarian",
+    "Investigator",
+    "Chef",
+    "Empath",
+    "Fortune Teller",
+    "Butler",
+    "Spy"
+  ],
+  "other_night": [
+    "Poisoner",
+    "Monk",
+    "Scarlet Woman",
+    "Imp",
+    "Ravenkeeper",
+    "Undertaker",
+    "Fortune Teller",
+    "Butler",
+    "Spy"
+  ]
+}
