@@ -28,12 +28,33 @@ type GameSnapshot struct {
 }
 
 type Game struct {
-	Players []*Player      `json:"players"`
-	Phase   Phase          `json:"phase"`
-	Script  Script         `json:"script"`
-	Turn    int            `json:"turn"` // 1-indexed turn counter
-	Log     []string       `json:"log"`
-	History []GameSnapshot `json:"-"` // Do not persist history to avoid recursion/bloat
+	Players []*Player `json:"players"`
+	Phase   Phase     `json:"phase"`
+	Script  Script    `json:"script"`
+	Turn    int       `json:"turn"` // 1-indexed turn counter
+	Log     []string  `json:"log"`
+	// Do not persist history to avoid recursion/bloat
+	History []GameSnapshot `json:"-"`
+}
+
+func (g *Game) GetAliveCounts() (good, evil int) {
+	for _, p := range g.Players {
+		if p.IsAlive {
+			if p.Role.Type == Townsfolk || p.Role.Type == Outsider {
+				good++
+			} else if p.Role.Type == Minion || p.Role.Type == Demon {
+				evil++
+			}
+		}
+	}
+	return good, evil
+}
+
+func (g *Game) GetEffectiveRoleType(p *Player) string {
+	if p.RegistrationOverride != "" {
+		return p.RegistrationOverride
+	}
+	return string(p.Role.Type)
 }
 
 func NewGame() *Game {
@@ -316,28 +337,15 @@ func (g *Game) GetEmpathInfo(empath *Player) string {
 
 	// Calculate true count
 	count := 0
-	if n1.Role.Type == Minion || n1.Role.Type == Demon {
+
+	t1 := g.GetEffectiveRoleType(n1)
+	if t1 == "Minion" || t1 == "Demon" {
 		count++
 	}
-	if n1 != n2 { // If only 2 players left, n1 == n2, don't double count?
-		// Rules: "neighbors". If 2 players, neighbor is same.
-		// Actually "2 alive neighbors". If total alive is 2 (Empath + 1), then neighbor is same.
-		// Empath reads "how many of your 2 alive neighbors".
-		// If only 2 players alive: Empath + A. A is both CW and CCW neighbor?
-		// Usually considered 1 neighbor. But text says "2 alive neighbors".
-		// If only 1 neighbor alive?
-		// Standard ruling: If only 2 players alive, they effectively have 1 neighbor?
-		// No, Blood on the Clocktower rules usually imply adjacent slots.
-		// If 3 players: A (Empath) -> B -> C -> A. Neighbors are B and C.
-		// If 2 players: A -> B -> A. Neighbor is B (CW) and B (CCW).
-		// Rules say "neighbors". Usually implies distinct players?
-		// Check wiki/rules if possible. Assuming standard logic: Distinct neighbors unless total < 3?
-		// Let's count them individually if they are logically distinct directional neighbors.
-		// But in 2 player game, n1 == n2. Is count 1 or 2?
-		// "Empath: ...how many of your 2 alive neighbors..."
-		// If n1 == n2, it's the same person. It should probably count once?
-		// But let's assume standard >2 player game for simplicity.
-		if n2.Role.Type == Minion || n2.Role.Type == Demon {
+
+	if n1 != n2 {
+		t2 := g.GetEffectiveRoleType(n2)
+		if t2 == "Minion" || t2 == "Demon" {
 			count++
 		}
 	} else {
@@ -368,15 +376,13 @@ func (g *Game) IsDemonOrRedHerring(p *Player) bool {
 	if p == nil {
 		return false
 	}
-	// Normal Demon check
-	if p.Role.Type == Demon {
-		return true
-	}
-	// Red Herring check
 	if p.IsRedHerring {
 		return true
 	}
-	// TODO: Handle Recluse registering as Evil/Demon if we get to that complexity
+	// Normal Demon check (with overrides)
+	if g.GetEffectiveRoleType(p) == "Demon" {
+		return true
+	}
 	return false
 }
 

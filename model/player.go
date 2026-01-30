@@ -7,8 +7,9 @@ type Player struct {
 	IsAlive bool   `json:"is_alive"`
 
 	// Game State
-	Shroud    bool     `json:"shroud"` // Has used their ghost vote?
-	Reminders []string `json:"reminders"`
+	UsedGhostVote        bool     `json:"used_ghost_vote"` // Has used their ghost vote?
+	Reminders            []string `json:"reminders"`
+	RegistrationOverride string   `json:"registration_override"` // "Townsfolk", "Outsider", "Minion", "Demon" or empty
 
 	// Status Flags
 	IsPoisoned   bool `json:"is_poisoned"`

@@ -133,6 +133,36 @@ func (m *GrimoireModel) updateOverview(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.state = StateEdit
 	case "i":
 		m.state = StateRoleInfo
+	case "g":
+		// Toggle Ghost Vote (only if dead)
+		if m.cursor < len(m.game.Players) {
+			p := m.game.Players[m.cursor]
+			if !p.IsAlive {
+				p.UsedGhostVote = !p.UsedGhostVote
+				m.game.SaveState()
+			}
+		}
+	case "R":
+		// Toggle Registration Override
+		// Cycle: "" -> "Townsfolk" -> "Outsider" -> "Minion" -> "Demon" -> ""
+		if m.cursor < len(m.game.Players) {
+			p := m.game.Players[m.cursor]
+			switch p.RegistrationOverride {
+			case "":
+				p.RegistrationOverride = "Townsfolk"
+			case "Townsfolk":
+				p.RegistrationOverride = "Outsider"
+			case "Outsider":
+				p.RegistrationOverride = "Minion"
+			case "Minion":
+				p.RegistrationOverride = "Demon"
+			case "Demon":
+				p.RegistrationOverride = ""
+			default:
+				p.RegistrationOverride = ""
+			}
+			m.game.SaveState()
+		}
 	}
 	return m, nil
 }
@@ -982,10 +1012,20 @@ func (m *GrimoireModel) viewNightSelect() string {
 
 func (m *GrimoireModel) viewOverview() string {
 	s := strings.Builder{}
-	s.WriteString(StyleGridHeader.Render(fmt.Sprintf("Phase: %s", m.game.Phase)) + "\n\n")
+
+	// Scoreboard
+	good, evil := m.game.GetAliveCounts()
+	header := fmt.Sprintf("Phase: %s   |   Alive: %s vs %s   |   Turn: %d",
+		m.game.Phase,
+		lipgloss.NewStyle().Foreground(ColorTownsfolk).Render(fmt.Sprintf("Good %d", good)),
+		lipgloss.NewStyle().Foreground(ColorDemonRed).Render(fmt.Sprintf("Evil %d", evil)),
+		m.game.Turn,
+	)
+
+	s.WriteString(StyleGridHeader.Render(header) + "\n\n")
 
 	s.WriteString(m.renderGrimoireTable())
-	s.WriteString("\n\n(j/k) Move • (e) Edit • (i) Info • (enter) Toggle Life • (n) Next Phase • (u) Undo • (q) Quit • (Ctrl+n) Wipe & Quit")
+	s.WriteString("\n\n(j/k) Move • (e) Edit • (i) Info • (enter) Toggle Life • (g) Ghost Vote • (R) Reg • (n) Next Phase • (u) Undo")
 	return s.String()
 }
 
@@ -1007,6 +1047,20 @@ func (m *GrimoireModel) renderGrimoireTable() string {
 		status := "ALIVE"
 		if !p.IsAlive {
 			status = "DEAD"
+			if !p.UsedGhostVote {
+				status += " 🗳️"
+			}
+		}
+
+		// Registration Override Display
+		override := ""
+		if p.RegistrationOverride != "" {
+			// Compact display: [Reg: Minion]
+			short := p.RegistrationOverride
+			if len(short) > 3 {
+				short = short[:3]
+			}
+			override = fmt.Sprintf(" [Reg:%s]", short)
 		}
 
 		// Status Effects
@@ -1035,8 +1089,8 @@ func (m *GrimoireModel) renderGrimoireTable() string {
 		coloredRole := styleRole(rName, p.Role.Type)
 		coloredType := styleRole(rType, p.Role.Type)
 
-		row := fmt.Sprintf("%s %-3d | %-12s | %s | %s | %-8s | %-10s",
-			cursor, p.ID, p.Name, coloredRole, coloredType, status, effects)
+		row := fmt.Sprintf("%s %-3d | %-12s | %s | %s | %-8s | %-10s%s",
+			cursor, p.ID, p.Name, coloredRole, coloredType, status, effects, override)
 
 		if isSelected {
 			s.WriteString(StyleSelected.Render(row) + "\n")
