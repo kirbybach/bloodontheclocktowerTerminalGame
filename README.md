@@ -8,6 +8,11 @@ A robust, CLI-based Storyteller helper for running *Blood on the Clocktower* gam
 - **The Grimoire**: A clean, responsive list view of the town square (powered by `bubbletea` & `lipgloss`).
     - **Status Tracking**: Toggle players between Alive/Dead states.
     - **Phase Management**: Switch between Day and Night phases.
+    - **Registration Override**: Handle **Spy/Recluse** logic by overriding how a player registers to game effects (Townsfolk, Outsider, Minion, Demon).
+- **Automated Night Phase**:
+    - **Guided Walkthrough**: Steps through the night sequence based on the script and character order.
+    - **Action Logic**: Handles Poisoner, Monk, Imp, etc., with automatic state updates.
+    - **Fortune Teller**: Dedicated logic for Red Herrings and "Yes/No" signal generation (accounting for Poison/Drunk).
 - **Resilience**:
     - **Auto-Save**: Game state persists to `game_state.json` on every action.
     - **Undo System**: Infinite generic undo stack (`u` key) to correct Storyteller mistakes.
@@ -16,6 +21,7 @@ A robust, CLI-based Storyteller helper for running *Blood on the Clocktower* gam
     - Supports loading custom scripts via JSON.
 - **Smart Logic**:
     - Correctly handles circular adjacency logic (skipping dead players for Empath/Chef checks).
+    - **Malfunction Handling**: Automatically flags info as "False/Malfunction" in logs if the actor is Drunk or Poisoned.
 
 ## 🚀 Getting Started
 
@@ -38,6 +44,7 @@ go build -o clocktower
 
 ## 🎮 Controls
 
+### Global / Overview
 | Key | Action |
 | :--- | :--- |
 | `↑` / `k` | Move selection up |
@@ -45,9 +52,28 @@ go build -o clocktower
 | `Enter` | Toggle Player Life/Death |
 | `n` | Next Phase (Day/Night) |
 | `u` | Undo last action |
-| `e` | Edit Mode (Swap/Change Role) |
+| `e` | **Edit Mode** (Move players, Change roles) |
+| `i` | View Role Info (Ability & Reminders) |
+| `g` | Toggle **Ghost Vote** (Dead players only) |
+| `R` | Cycle **Registration Override** (Spy/Recluse) |
 | `q` | Quit |
 | `Ctrl+n` | Wipe Game & Quit |
+
+### Edit Mode (`e`)
+| Key | Action |
+| :--- | :--- |
+| `Shift+K` | Move Player Up (Swap) |
+| `Shift+J` | Move Player Down (Swap) |
+| `Enter` / `r` | Change Role |
+| `Esc` | Exit Edit Mode |
+
+### Night Phase
+| Key | Action |
+| :--- | :--- |
+| `Enter` | Confirm Action / Select Target |
+| `→` / `l` | Skip / Next Step |
+| `f` | Set **Red Herring** (Fortune Teller only) |
+| `Esc` | Cancel / Back |
 
 ## 🛠️ Tech Stack
 
