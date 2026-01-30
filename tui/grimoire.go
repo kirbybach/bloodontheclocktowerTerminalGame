@@ -763,24 +763,13 @@ func (m *GrimoireModel) viewNightFortuneRedHerring() string {
 	s.WriteString(StyleGridHeader.Render(" SELECT RED HERRING ") + "\n\n")
 
 	// Reuse selection list but maybe show who is currently Red Herring?
+	marks := make(map[int]string)
 	for i, p := range m.game.Players {
-		cursor := " "
-		if m.selectCursor == i {
-			cursor = ">"
-		}
-
-		mark := ""
 		if p.IsRedHerring {
-			mark = " [CURRENT]"
-		}
-
-		line := fmt.Sprintf("%s %-12s | %-12s%s", cursor, p.Name, p.Role.Name, mark)
-		if m.selectCursor == i {
-			s.WriteString(StyleSelected.Render(line) + "\n")
-		} else {
-			s.WriteString(StyleCell.Render(line) + "\n")
+			marks[i] = "[CURRENT]"
 		}
 	}
+	s.WriteString(m.renderGrimoireTable(m.selectCursor, marks))
 	s.WriteString("\n(Enter) Set Red Herring • (Esc) Cancel")
 	return s.String()
 }
@@ -835,7 +824,7 @@ func (m *GrimoireModel) viewNightInfoSelect1() string {
 	s := strings.Builder{}
 	actor := m.nightQueue[m.nightStep]
 	s.WriteString(StyleGridHeader.Render(" SELECT PLAYER 1 for "+strings.ToUpper(actor)) + "\n\n")
-	s.WriteString(m.renderPlayerSelectionList())
+	s.WriteString(m.renderGrimoireTable(m.selectCursor, nil))
 	s.WriteString("\n(Enter) Confirm 1st Target • (Esc) Cancel")
 	return s.String()
 }
@@ -846,8 +835,9 @@ func (m *GrimoireModel) viewNightInfoSelect2() string {
 	s.WriteString(StyleGridHeader.Render(" SELECT PLAYER 2 for "+strings.ToUpper(actor)) + "\n\n")
 
 	// Show list but maybe highlight the first selection?
-	// Re-using renderPlayerSelectionList for consistency, but distinct cursor.
-	s.WriteString(m.renderPlayerSelectionList())
+	// Re-using renderGrimoireTable with mark for first selection
+	marks := map[int]string{m.infoP1: "[1]"}
+	s.WriteString(m.renderGrimoireTable(m.selectCursor, marks))
 	s.WriteString("\n(Enter) Confirm 2nd Target • (Esc) Cancel")
 	return s.String()
 }
@@ -883,30 +873,6 @@ func (m *GrimoireModel) viewNightInfoRole() string {
 	return s.String()
 }
 
-func (m *GrimoireModel) renderPlayerSelectionList() string {
-	s := strings.Builder{}
-	for i, p := range m.game.Players {
-		cursor := " "
-		if m.selectCursor == i {
-			cursor = ">"
-		}
-
-		// Mark previously selected
-		mark := ""
-		if m.state == StateNightInfoSelect2 && m.infoP1 == i {
-			mark = " [1]"
-		}
-
-		line := fmt.Sprintf("%s %-12s | %-12s%s", cursor, p.Name, styleRole(p.Role.Name, p.Role.Type), mark)
-		if m.selectCursor == i {
-			s.WriteString(StyleSelected.Render(line) + "\n")
-		} else {
-			s.WriteString(StyleCell.Render(line) + "\n")
-		}
-	}
-	return s.String()
-}
-
 func (m *GrimoireModel) viewNightWalk() string {
 	if m.nightStep >= len(m.nightQueue) {
 		return "Night ends... Press Enter."
@@ -927,7 +893,7 @@ func (m *GrimoireModel) viewNightWalk() string {
 	s.WriteString(StyleGridHeader.Render(" NIGHT PHASE ") + "\n\n")
 
 	// Show Grimoire Table for context (dimmed/compact?)
-	s.WriteString(m.renderGrimoireTable())
+	s.WriteString(m.renderGrimoireTable(m.cursor, nil))
 	s.WriteString("\n" + strings.Repeat("=", 80) + "\n\n")
 
 	s.WriteString(fmt.Sprintf("Step %d/%d:  %s\n\n", m.nightStep+1, len(m.nightQueue), strings.ToUpper(roleName)))
@@ -991,20 +957,8 @@ func (m *GrimoireModel) viewNightSelect() string {
 	actor := m.nightQueue[m.nightStep]
 	s.WriteString(StyleGridHeader.Render(" SELECT TARGET for "+strings.ToUpper(actor)) + "\n\n")
 
-	// Show list of potential targets (all players)
-	for i, p := range m.game.Players {
-		cursor := " "
-		if m.selectCursor == i {
-			cursor = ">"
-		}
-
-		line := fmt.Sprintf("%s %-12s | %-12s", cursor, p.Name, p.Role.Name)
-		if m.selectCursor == i {
-			s.WriteString(StyleSelected.Render(line) + "\n")
-		} else {
-			s.WriteString(StyleCell.Render(line) + "\n")
-		}
-	}
+	// Show full Grimoire with selection
+	s.WriteString(m.renderGrimoireTable(m.selectCursor, nil))
 
 	s.WriteString("\n(Enter) Confirm Target • (Esc) Cancel")
 	return s.String()
@@ -1024,12 +978,12 @@ func (m *GrimoireModel) viewOverview() string {
 
 	s.WriteString(StyleGridHeader.Render(header) + "\n\n")
 
-	s.WriteString(m.renderGrimoireTable())
+	s.WriteString(m.renderGrimoireTable(m.cursor, nil))
 	s.WriteString("\n\n(j/k) Move • (e) Edit • (i) Info • (enter) Toggle Life • (g) Ghost Vote • (R) Reg • (n) Next Phase • (u) Undo")
 	return s.String()
 }
 
-func (m *GrimoireModel) renderGrimoireTable() string {
+func (m *GrimoireModel) renderGrimoireTable(activeCursor int, marks map[int]string) string {
 	s := strings.Builder{}
 	// Table header
 	s.WriteString(fmt.Sprintf("%-3s | %-12s | %-15s | %-10s | %-8s | %-10s\n", "#", "Name", "Role", "Type", "Status", "Effects"))
@@ -1040,7 +994,7 @@ func (m *GrimoireModel) renderGrimoireTable() string {
 			continue
 		}
 		cursor := " "
-		if m.cursor == i {
+		if activeCursor == i {
 			cursor = ">"
 		}
 
@@ -1079,8 +1033,15 @@ func (m *GrimoireModel) renderGrimoireTable() string {
 			effects += "🚩 "
 		}
 
+		// Custom Marks (e.g. selection numbers)
+		if marks != nil {
+			if mark, ok := marks[i]; ok {
+				effects += mark + " "
+			}
+		}
+
 		// Check selection
-		isSelected := m.cursor == i
+		isSelected := activeCursor == i
 
 		// Role Coloring
 		rName := fmt.Sprintf("%-15s", p.Role.Name)
